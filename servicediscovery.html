@@ -476,7 +476,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>Le service <em>commandes</em> a besoin de s&#8217;adresser au service <em>produits</em> pour obtenir plus d&#8217;informations.</p>
 </div>
 <div class="paragraph">
-<p>Le service <em>produits</em> va exposer un service en charge de fournir d&#8217;exposer les informations de base :</p>
+<p>Le service <em>produits</em> va exposer un service en charge de fournir les informations de base :</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -536,7 +536,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sect3">
 <h4 id="trueajout-de-l-annotation-pour-d-clarer-le-serveur"><a class="anchor" href="#trueajout-de-l-annotation-pour-d-clarer-le-serveur"></a>Ajout de l&#8217;annotation pour déclarer le serveur</h4>
 <div class="paragraph">
-<p>Dans la classe <em>*Application</em> de ce projet, il faut ajouter l&#8217;annotation <em>@EnableEurekaServer</em></p>
+<p>Dans la classe <em>*Application*</em> de ce projet, il faut ajouter l&#8217;annotation <em>@EnableEurekaServer</em></p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -617,7 +617,7 @@ public class ProduitsApplication {
 <div class="sect3">
 <h4 id="trueconfiguration"><a class="anchor" href="#trueconfiguration"></a>Configuration</h4>
 <div class="paragraph">
-<p>Il faut indiquer le nom sous lequel les services de ce modules seront accessibles.
+<p>Il faut indiquer le nom sous lequel les services de ce module seront accessibles.
 Pour cela dans le contexte, <em>bootstrap.properties</em>, il fait préciser le nom de l&#8217;application.</p>
 </div>
 <div class="listingblock">
@@ -724,10 +724,10 @@ public class CommandesApplication {
 <p>Cette application sera donc déclarée au niveau du service discovery.</p>
 </div>
 <div class="paragraph">
-<p>La configuration se fait dans les fichiers properties.
-.Fichier bootstrap.properties pour le nom du service</p>
+<p>La configuration se fait dans les fichiers properties.</p>
 </div>
 <div class="listingblock">
+<div class="title">Fichier bootstrap.properties pour le nom du service</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-java" data-lang="java">spring.application.name=commandes</code></pre>
 </div>
@@ -764,7 +764,7 @@ public class RestClientConfiguration {
 </div>
 </div>
 <div class="paragraph">
-<p>L&#8217;annotation @LoadBalanced est indispensable ici (<em>Ribbon ?</em>)</p>
+<p>L&#8217;annotation <em>@LoadBalanced</em> est indispensable ici (<em>Ribbon ?</em>)</p>
 </div>
 </div>
 <div class="sect3">
@@ -935,7 +935,7 @@ Si dans le navigateur, en retour de l&#8217;appel un objet json s&#8217;affiche 
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2018-10-19 21:49:28 PM
+Last updated 2018-10-20 11:47:53 PM
 </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.9.1/styles/github.min.css">
