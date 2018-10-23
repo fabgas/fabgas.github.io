@@ -5,7 +5,7 @@
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.5.dev">
-<title>Dockerisation de cette application</title>
+<title>Gateway : Zuul arrive</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -420,262 +420,215 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="article">
 <div id="header">
-<h1>Dockerisation de cette application</h1>
+<h1>Gateway : Zuul arrive</h1>
 </div>
 <div id="content">
 <div id="preamble">
 <div class="sectionbody">
+<div class="paragraph">
+<p>Lorsque l&#8217;on appelle un service depuis le navigateur, on ne peut pas utiliser les même nom de service que pour Eureka.
+Il faut absolument préciser le port, l&#8217;url. Si l&#8217;on augmente le nombre d&#8217;instances, chacune avec sont propre port, cela devient difficile à gérer pour le client.</p>
+</div>
+<div class="paragraph">
+<p>Comment distribuer les appels sur les différents ports depuis le client ?</p>
+</div>
+<div class="paragraph">
+<p>Une solution commune est <strong>la Gateway</strong></p>
+</div>
 <div class="listingblock">
 <div class="content">
-<pre>L'application précédente nécessite de démarrer 3 instances de manière manuelles.
-Pour chaque module, il faut executer l'application dans des fenêtres différentes.
-Pour simplifier le processus, on va dockeriser cette application.</pre>
+<pre>Une gateway est un point d'entrée unique dans le système, utilisé  pour gérer les requêtes en les routant vers les bons services. Elle peut également être utilisée pourle monitoring, authentification et plus encore...</pre>
 </div>
 </div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-En réalité, la simplication n&#8217;est qu&#8217;apparente, il est compliqué de debugger une application docker. Dockeriser une application simplifie le déploiement.
-</td>
-</tr>
-</table>
+<div class="imageblock">
+<div class="content">
+<img src="images/gateway.png" alt="gateway" width="300" height="200">
+</div>
+</div>
+<div class="paragraph">
+<p>Lors d&#8217;un appel REST, la gateway demande au serveur "servicediscovery" de lui donner l&#8217;adresse du service entrant en se basant sur un mapping prédéfini entre l&#8217;uri et le nom du service. Comme tous les services se sont préalablement enregistrés, la gateway est en mesure de rediriger correctement les appels entrants.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="truedockerisation-d-un-module"><a class="anchor" href="#truedockerisation-d-un-module"></a>Dockerisation d&#8217;un module</h2>
+<h2 id="truecr-ation-du-module"><a class="anchor" href="#truecr-ation-du-module"></a>Création du module</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>La création de l&#8217;image d&#8217;un module est simple dans le cas de notre application. Il suffit de créer un fichier <strong>Dockerfile</strong>.</p>
-</div>
-<div class="listingblock">
-<div class="title">Dockerfile</div>
-<div class="content">
-<pre>FROM java:8-jre <i class="conum" data-value="1"></i><b>(1)</b>
-
-ENV MICROSERVICE_FILE target/commandes-0.0.1-SNAPSHOT.jar <i class="conum" data-value="2"></i><b>(2)</b>
-
-EXPOSE 8300 <i class="conum" data-value="3"></i><b>(3)</b>
-
-COPY $MICROSERVICE_FILE $MICROSERVICE_HOME/ <i class="conum" data-value="4"></i><b>(4)</b>
-
-
-WORKDIR $MICROSERVICE_HOME
-ENTRYPOINT ["sh", "-c"]
-CMD ["java  -jar commandes-0.0.1-SNAPSHOT.jar"] <i class="conum" data-value="5"></i><b>(5)</b></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>pour executer notre application, on a uniquement besoin de <em>java</em>.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>On créé une variable d&#8217;environnement pour référencer l&#8217;executable</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>On indique que le port 8300 va être accessible à l&#8217;extérieur. <em>Dans le cas du module commandes, cela est nécessaire. Pour le module produits, pas nécessaire car accéder uniquement entre container</em>.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>Copie de l'éxécutable vers le répertoire Docker</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="5"></i><b>5</b></td>
-<td>Execution de l&#8217;executable.</td>
-</tr>
-</table>
-</div>
-<div class="admonitionblock warning">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
-</td>
-<td class="content">
-La version du jar doit pouvoir être externalisé. A voir comment faire.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>Comme cela ne fonctionne plus sous le windows classique, quelques changements sont nécessaires dans les adresses (host) des différents services configurés dans le fichier <em>application.properties</em>.</p>
-</div>
-<div class="listingblock">
-<div class="title">Modification de certains host. Exemple du fichier properties de <em>commandes</em>.</div>
-<div class="content">
-<pre>eureka.client.serviceUrl.defaultZone=http://serviceregistry:8761/eureka</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Le localhost a été remplacé par <em>serviceregistry</em> qui sera le nom du service(image) du module de service-registry dans Docker.</p>
-</div>
-<div class="paragraph">
-<p>La communication se faire entre container et ne passe pas par le localhost.</p>
-</div>
-<div class="paragraph">
-<p><strong>Il n&#8217;y a pas d&#8217;autres modifications nécessaires</strong></p>
+<p>Pour ajouter la gateway, il faut créér un module spécifique. Comme pour les précédents cela passe par le site de spring.
+Les dépendances minimum sont Web,Eureka client, Zuul et devtools.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="truemettre-tout-cela-ensemble"><a class="anchor" href="#truemettre-tout-cela-ensemble"></a>Mettre tout cela ensemble</h2>
+<h2 id="trueparam-trage-de-la-gateway"><a class="anchor" href="#trueparam-trage-de-la-gateway"></a>Paramétrage de la gateway</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Bon, on a 3 fichiers <strong>Dockerfile</strong>, et alors &#8230;&#8203;</p>
+<p>Il faut d&#8217;abord configurer la classe d&#8217;application de spring en ajoutant la traditionnel annotation <em>@EnableEurekaClient</em> pour que la gateway s&#8217;enregistre auprès du serveur de servicediscovery.</p>
 </div>
 <div class="paragraph">
-<p>Il faut les assembler pour qu&#8217;ils fonctionnent ensemble.</p>
-</div>
-<div class="paragraph">
-<p>Pour cela on a utiliser l&#8217;outil <strong>docker-compose</strong>. Il permet d&#8217;assembler des images Docker ensemble.</p>
-</div>
-<div class="paragraph">
-<p>Notre but est de faire fonctionner nos trois modules (commandes, produits, service-registry).</p>
-</div>
-<div class="paragraph">
-<p>La première étape va consister a écrire un script pour constuire les images. Cela se fera dans la machine Docker.</p>
+<p>Le nom de la librairie qui contient la gateway porte le nom de Zuul. L&#8217;initialisation de la gateway consiste à ajouter l&#8217;annotation <em>@EnableZuulProxy</em>.</p>
 </div>
 <div class="listingblock">
-<div class="title">build.sh</div>
 <div class="content">
-<pre>docker build -t "tutorial/commandes" ../commandes <i class="conum" data-value="1"></i><b>(1)</b>
-docker build -t "tutorial/produits" ../produits
-docker build -t "tutorial/serviceregistry" ../serviceregistry</pre>
+<pre class="highlightjs highlight"><code class="language-java" data-lang="java">@SpringBootApplication
+@EnableEurekaClient
+@EnableZuulProxy
+public class GatewayApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(GatewayApplication.class, args);
+	}
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Cela ne fait que démarrer la gateway, il faut maintenanty faire le routing.</p>
+</div>
+<div class="paragraph">
+<p>Il faut pour cela indiquer les différentes routes et le lien vers les services dans le fichier application.yml (yaml plus pratique ici)</p>
+</div>
+<div class="listingblock">
+<div class="title">application.yml</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yml" data-lang="yml">server:
+  port: 8000 <i class="conum" data-value="1"></i><b>(1)</b>
+zuul:
+  ignoredServices: '*'
+  prefix: /api <i class="conum" data-value="2"></i><b>(2)</b>
+  routes:
+    commandes: <i class="conum" data-value="3"></i><b>(3)</b>
+      path: /commandes/** <i class="conum" data-value="4"></i><b>(4)</b>
+      serviceId: commandes <i class="conum" data-value="5"></i><b>(5)</b>
+      strip-prefix: false
+    produits:
+      path: /produits/**
+      serviceId: produits
+      strip-prefix: true <i class="conum" data-value="6"></i><b>(6)</b>
+endpoints:
+  routes:
+    sensitive: false
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/ <i class="conum" data-value="7"></i><b>(7)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>on construit une image en indiquant le nom de l&#8217;image ("tutorial/commandes) et le chemin  vers le fichier <em>Dockerfile</em>.</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>Ce script permet donc de cosntruire les 3 images.</p>
-</div>
-<div class="paragraph">
-<p>Il reste à écrire le paramétrage du <em>docker-compose</em>.</p>
-</div>
-<div class="listingblock">
-<div class="title">Fichier docker-compose.yml au format yaml.</div>
-<div class="content">
-<pre>version: "3"
-
-services:
-
-  serviceregistry: <i class="conum" data-value="1"></i><b>(1)</b>
-    image: tutorial/serviceregistry <i class="conum" data-value="2"></i><b>(2)</b>
-    ports:
-      - "8761:8761" <i class="conum" data-value="3"></i><b>(3)</b>
-  produits:
-    image: tutorial/produits
-    links:
-      - serviceregistry <i class="conum" data-value="4"></i><b>(4)</b>
-  commandes:
-    image: tutorial/commandes
-    ports:
-      - "8300:8300" <i class="conum" data-value="6"></i><b>(6)</b>
-    links:
-      - serviceregistry
-      - produits <i class="conum" data-value="5"></i><b>(5)</b></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>Chaque container à un nom. On retrouve le nom utilisé dans les fichiers <em>applications.properties</em></td>
+<td>On définit comme d&#8217;habitude le port d&#8217;entrée de la gateway.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>on indique l&#8217;image à démarrer dans ce container. Même nom que dans le script de build.</td>
+<td>Il est possible de définir un préfixe obligatoire pour accéder à la gateway</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="3"></i><b>3</b></td>
-<td>Ici, le port 8761 est exposé à l&#8217;extérieur (pour le monitoring).</td>
+<td>Chaque route est identifiée par un nom unique</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
-<td>Il faut lier les container entre eux pour qu&#8217;ils puissent communiquer entre eux. Le container <em>produits</em> doit communiquer avec le service registry.</td>
+<td>Il faut indiquer la racine de l&#8217;uri permettant d&#8217;identifier la route.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="5"></i><b>5</b></td>
-<td>En plus du <em>serviceregisry</em>, le module <em>commandes</em> va appeler un service du container <em>produits</em>.</td>
+<td>on indiquer vers quel service rediriger l&#8217;appel (nom du service dans Eureka).</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="6"></i><b>6</b></td>
-<td>on expose le port 8300 pour pouvoir appeler l&#8217;uri <em>/commandes</em></td>
+<td>lorsque l&#8217;url <em>/produits/produit/{id}</em> est appelée, le <em>/produits/</em> est supprimée.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>Bien sur, il faut déclarer eureka, la gateway l&#8217;utilisant pour résoudre les urls.</td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>Dans une machine docker, il suffit d&#8217;exécuter la commande <em>docker-compose up</em>.</p>
+<p>Dans le fichier, <em>bootstrap.properties</em>, il faut donner un nom à cette application.</p>
 </div>
-<div class="paragraph">
-<p>Les trois container démarrent, ils finissent par s&#8217;enregistrer auprès du service registry.</p>
+<div class="listingblock">
+<div class="title">bootstrap.properties</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-properties" data-lang="properties">spring.application.name=gateway</code></pre>
 </div>
-<div class="paragraph">
-<p>Pour tester, il faut appeler l&#8217;uri <em>commandes</em> avec l&#8217;ip de la machine docker (docker-machine  ip) sur le port 8300.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="truey-a-pas-que-docker"><a class="anchor" href="#truey-a-pas-que-docker"></a>Y&#8217;a pas que Docker !</h2>
+<h2 id="truetout-doit-passer-par-la-gateway"><a class="anchor" href="#truetout-doit-passer-par-la-gateway"></a>Tout doit passer  par la gateway</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Les fichiers de configuration (<em>application.properties</em>) ont été modifié pour que cela fonctionne avec Docker. Il a notamment fallut modifier l&#8217;url du serveur Eureka en remplacant <em>localhost</em> par le nom du container <em>serviceregistry</em>.</p>
-</div>
-<div class="paragraph">
-<p>Seulement, cette configuration ne peut fonctionner en local. Pour introduire une cohabitation, on va dupliquer les fichiers de <em>application.properties</em> en ajoutant <em>-docker</em> à la copie.
-Dans chaque module on aura ainsi un fichier <em>application.properties</em> et un fichier <em>application-docker.properties</em>.
-En démarrant les instances avec l&#8217;option   <strong>-Dspring.profiles.active=docker</strong> ,  spring va automatiquement utiliser les bons fichiers de properties.</p>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-L&#8217;utilisation de Docker ne paraît pas indispensable avec une application aussi simple. Mais maintenant si on ajoute une base de données, un broker (RabbitMq), Elastic search par exemple&#8230;&#8203; la configuration se compliquera !.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>Par exemple en ajoutant quelques lignes on peut ajouter une instance de rabbitmq:</p>
+<p>Dans la configuration actuelle du module <em>Commandes</em>, l&#8217;appel avec le module <em>Produits</em> se fait sans passer par la gateway.</p>
 </div>
 <div class="listingblock">
-<div class="title">Démarrage de rabbitMq parmis les autres containers</div>
+<div class="title">application.properties du module <em>Commandes</em></div>
 <div class="content">
-<pre> rabbitmq:
-    image: bitnami/rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      - RABBITMQ_USERNAME=fg
-      - RABBITMQ_PASSWORD=fg</pre>
+<pre>produitHost=http://produits</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Les containers qui souhaitent communiquer avec rabbitmq devront l&#8217;ajouter dans la liste de leurs <em>links</em>.</p>
+<p>La mise en place de l&#8217;appel par la gateway se fait en remplacant la valeur par l&#8217;url de la gateway</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>produitHost=http://localhost:8000/api/produits</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>L&#8217;utilisation de la valeur true pour la propriété <em>strip-prefix</em> prend tout son sens.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/gatewayinterne.png" alt="appelinterne" width="300" height="200">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="truecors"><a class="anchor" href="#truecors"></a>CORS</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Il reste un souci, pour accéder à la gateway de l&#8217;extérieur en se situant sur un serveur différent (angular ou architecture différente), il faut paramétrer CORS</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java" data-lang="java">@Configuration
+@EnableWebMvc
+public class WebConfiguration extends WebMvcConfigurerAdapter {
+    /**
+     * Enable cross origin Ressources sharing
+     */
+    @Override
+    public void addCorsMappings(final CorsRegistry registry) {
+        registry.addMapping("/**");
+    }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Cette étape n&#8217;est obligatoire lorsque on accède aux services depuis le navigateur avec localhost ou l&#8217;ip de la machine Docker.
+Elle devient nécessaire dans le cas d&#8217;un serveur qui hébergerait une application WEB.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="truetest"><a class="anchor" href="#truetest"></a>TEST</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Pour tester le bon fonctionnement de cette architecture, il faut appeler l&#8217;url d&#8217;Eureka (localhost:8761)
+pour vérifier que la gateway s&#8217;est bien enregistré aurpès d&#8217;Eureka.</p>
+</div>
+<div class="paragraph">
+<p>Enfin, il faut tester le service REST du module <em>commandes</em>, en appelant l&#8217;uri <em>localhost:8000/api/commandes</em> .</p>
 </div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2018-10-20 19:48:53 PM
+Last updated 2018-10-23 07:35:32 PM
 </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.9.1/styles/github.min.css">
