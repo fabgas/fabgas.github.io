@@ -1959,8 +1959,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "AuthenticationService", function() { return AuthenticationService; });
 /* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm5/core.js");
 /* harmony import */ var _angular_common_http__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/common/http */ "./node_modules/@angular/common/fesm5/http.js");
-/* harmony import */ var rxjs_operators__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! rxjs/operators */ "./node_modules/rxjs/_esm5/operators/index.js");
-/* harmony import */ var _environments_environment__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./../../../environments/environment */ "./src/environments/environment.ts");
+/* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! rxjs */ "./node_modules/rxjs/_esm5/index.js");
 var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -1973,7 +1972,6 @@ var __metadata = (undefined && undefined.__metadata) || function (k, v) {
 
 
 
-
 var AuthenticationService = /** @class */ (function () {
     function AuthenticationService(http) {
         this.http = http;
@@ -1983,17 +1981,19 @@ var AuthenticationService = /** @class */ (function () {
             headers: new _angular_common_http__WEBPACK_IMPORTED_MODULE_1__["HttpHeaders"]({ 'Content-Type': 'application/json' }),
             observe: 'response'
         };
-        return this.http.post(_environments_environment__WEBPACK_IMPORTED_MODULE_3__["environment"].url + '/auth', { username: username, password: password }, httpOptions)
-            .pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_2__["map"])(function (user) {
-            var keys = user.headers.get('Authorization');
-            console.log(keys);
-            // login successful if there's a jwt token in the response
-            if (keys) {
-                // store user details and jwt token in local storage to keep user logged in between page refreshes
-                localStorage.setItem('token', JSON.stringify(keys));
-            }
-            return user;
-        }));
+        //        return this.http.post<any>(environment.url+'/auth', { username, password },httpOptions)
+        //            .pipe(map((user:HttpResponse<any>) => {
+        //                const keys = user.headers.get('Authorization');
+        //                     console.log(keys);
+        //                // login successful if there's a jwt token in the response
+        //                if (keys) {
+        //                    // store user details and jwt token in local storage to keep user logged in between page refreshes
+        //                    localStorage.setItem('token', JSON.stringify(keys));
+        //                }
+        //                return user;
+        //            }));
+        localStorage.setItem('token', JSON.stringify('ezrezrzerze'));
+        return Object(rxjs__WEBPACK_IMPORTED_MODULE_2__["of"])({ 'user': 'me' });
     };
     AuthenticationService.prototype.logout = function () {
         // remove user from local storage to log user out
