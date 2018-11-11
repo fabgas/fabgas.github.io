@@ -67,7 +67,7 @@ var ListPageModule = /** @class */ (function () {
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "\n\n<ion-header>\n  <ion-toolbar>\n    <ion-buttons slot=\"start\">\n      <ion-menu-button></ion-menu-button>\n    </ion-buttons>\n    <ion-title>\n      Projets\n    </ion-title>\n  </ion-toolbar>\n</ion-header>\n\n<ion-content>\n  <ion-list *ngIf=\"projets\">\n    <ion-item  *ngFor=\"let projet of projets\" (click)=\"navigate(projet)\">\n      {{projet.llProjet}}\n      <div class=\"item-note\" slot=\"end\">\n        {{projet.ucProjet}}\n      </div>\n    </ion-item>\n  </ion-list>\n  <!--\n    <div *ngIf=\"selectedItem\" padding>\n      You navigated here from <b>{{selectedItem.title }}</b>\n    </div>\n  -->\n</ion-content>\n"
+module.exports = "\n\n<ion-header>\n  <ion-toolbar color=\"primary\">\n    <ion-buttons slot=\"start\"  >\n      <ion-menu-button></ion-menu-button>\n    </ion-buttons>\n    <ion-title>\n      Projets\n    </ion-title>\n  </ion-toolbar>\n</ion-header>\n\n<ion-content>\n  <ion-list *ngIf=\"projets\">\n    <ion-item  *ngFor=\"let projet of projets\" (click)=\"navigate(projet)\">\n      {{projet.llProjet}}\n      <div class=\"item-note\" slot=\"end\">\n        {{projet.ucProjet}}\n      </div>\n    </ion-item>\n  </ion-list>\n  <!--\n    <div *ngIf=\"selectedItem\" padding>\n      You navigated here from <b>{{selectedItem.title }}</b>\n    </div>\n  -->\n</ion-content>\n"
 
 /***/ }),
 
