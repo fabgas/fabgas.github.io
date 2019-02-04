@@ -1,0 +1,371 @@
+= Vous ne passerez pas ! =
+
+----
+Tous les appels passe par la gateway, il est plus simple de sécuriser les appels. 
+Tout appel qui passe par la gateway doît être sécurisé. Dans cette version, c'est la technique JWT qui va être mis en place. Un microservice dédié à l'authentification est ajouté à l'architecture courante.
+----
+
+image::images/security.png[security,300,200]
+
+Ce nouveau microservice est en charge de :
+
+    * vérifier les mots de passe des utilisateurs
+    * en cas de succès, il donne un token.
+    * A chaque appel, le token est vérifié.
+    
+               
+== Gateway ==
+
+Cette première partie concerne l'implémentation coté "Gateway".
+Ici, pour toute requête la présence d'un token sera vérifiée.
+Pour cela, on dispose d'une clé secrète permettant de décoder le token et récupérer les noms et prénoms de l'utilisateur.
+
+=== Dépendances ===
+[source,maven]
+----
+	<dependency>
+        <groupId>io.jsonwebtoken</groupId>
+        <artifactId>jjwt</artifactId>
+        <version>0.9.0</version>
+   	</dependency>
+    <dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-security</artifactId>
+	</dependency>
+----
+
+===  encoder le password ===
+
+Dans la classe application de la gateway, on définit un Bean en charge de définir la stratégie d'encryptage du password
+
+[source,java]
+----
+@Bean
+public BCryptPasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder(); // For encrypting user password
+}
+----
+
+=== Quelques constantes ===
+
+Une classe contenant certaines constantes réutilisées dans les différentes classes
+
+[source,java]
+----
+@Getter
+public final class JwtConfig {
+    /** default value : /auth/**  */
+    @Value("${security.jwt.uri:/api/auth/**}")
+    private String uri; <1>
+
+    /** default value : Authorization */
+    @Value("${security.jwt.header:Authorization}")
+    private String header;<2>
+
+    // Default value Bearer
+    @Value("${security.jwt.prefix:Bearer}")
+    private String prefix;<3>
+        
+    // default value : 1 day    
+    @Value("${security.jwt.expiration:#{24*60*60}}")
+    private int expiration;<4>
+        
+    // default value JwtsecretKey
+    @Value("${security.jwt.secret:JwtSecretKey}")
+    private String secret;<5>
+
+
+    
+}
+----
+
+<1> Il s'agit de l'uri utilisée pour s'authentifier, elle ne sera pas protégée.
+<2> Le header contiendra le token à cette clé.
+<3> Avant le token on ajoute généralement ce mot _Bearer_
+<4> La durée de vie du token, ici 24h car exprimé en sec.
+<5> La clé secrète pour encoder le token. En prendre une plus sécurisée que JwtSercretKey bien sur. https://github.com/jwtk/jjwt
+
+=== Définition de la politique de sécurité ===
+
+Ajouter une sécurité spécifique consiste à sucharger la classe _WebSecurityConfigurerAdapter_.
+Il sera alors possible de redéfinir la sécurité de type http en y ajoutant un filtre, en listant les méthodes devant être sécurisées ou non,...
+
+[source,java]
+----
+@EnableWebSecurity<1>
+public class SecurityTokenConfig extends WebSecurityConfigurerAdapter {
+   
+    @Autowired
+    private JwtConfig jwtConfig; <2>
+
+
+    protected void configure(HttpSecurity http) throws Exception {
+
+        // on desactivce cors et csrf.
+        http.cors().and().csrf().disable() <3>
+          // make sure we use stateless session; session won't be used to store user's state.
+             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)<4>
+             .and()
+		    // handle an authorized attempts 
+            .exceptionHandling().authenticationEntryPoint((req, rsp, e) -> rsp.sendError(HttpServletResponse.SC_UNAUTHORIZED))<5> 
+            .and()
+		   // Add a filter to validate the tokens with every request
+		   .addFilterAfter(new JwtTokenAuthenticationFilter(jwtConfig), UsernamePasswordAuthenticationFilter.class)<6>
+		// authorization requests config
+		.authorizeRequests()
+		   // allow all who are accessing "auth" service
+		   .antMatchers(HttpMethod.POST, jwtConfig.getUri()).permitAll()<7>  
+		  // Any other request must be authenticated
+		   .anyRequest().authenticated(); <8>
+    }
+    @Bean
+  	public JwtConfig jwtConfig() {
+    	   return new JwtConfig();
+  	}
+}
+----
+La surcharge de la méthode _configure_ permet de définir la politique de sécurité.
+
+<1> l'annotation pour déclarer la classe. 
+<2> On instancie notre classe de constante.
+<3> On indique que l'on souhaite désactiver cors et du csrf.
+<4> Pas besoin de passer par la session http. (jwt est stateless)
+<5> En cas de problème d'authentification on renvoie une *401*
+<6> On ajoute un filtre pour effectuer les vérifications du token, la classe _UsernamePasswordAuthenticationFilter_ permettra de récupérer le _username_ et le _password_. C'est une classe de Spring Security.
+<7> Toutes les requêtes qui auront _api/auth/ dans l'uri seront autorisées sans authentification.
+<8> Toutes les autres requêtes devront avoir un token.
+
+=== Et maintenant le filtre ===
+
+Dans la classe précédente, le code instancie un filtre _JwtTokenAuthenticationFilter_ qui doit encore être décrite.
+
+Elle va vérifier l'adéquation de la requête avec la politique de sécurité en terme de token.
+
+[source,java]
+----
+
+public final class JwtTokenAuthenticationFilter extends OncePerRequestFilter{
+    private final JwtConfig jwtConfig;
+	
+	public JwtTokenAuthenticationFilter(JwtConfig jwtConfig) {
+		this.jwtConfig = jwtConfig;<1>
+	}
+    @Override
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+			throws ServletException, IOException {
+				
+       String header = request.getHeader(jwtConfig.getHeader());<2>
+		if(header == null || !header.startsWith(jwtConfig.getPrefix())) {<3>
+			chain.doFilter(request, response);  		// If not valid, go to the next filter.
+			return;
+        }
+        
+        // 3. Get the token
+        String token = header.replace(jwtConfig.getPrefix(), ""); // Bearer <4>
+        try {	// exceptions might be thrown in creating the claims if for example the token is expired
+			
+			// 4. Validate the token
+			Claims claims = Jwts.parser()
+					.setSigningKey(jwtConfig.getSecret().getBytes())
+					.parseClaimsJws(token)
+					.getBody(); <5>
+			
+			String username = claims.getSubject();
+			if(username != null) {
+				@SuppressWarnings("unchecked")
+				List<String> authorities = (List<String>) claims.get("authorities");<5>
+				
+				// 5. Create auth object
+				 UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+								 username, null, authorities.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList()));<6>
+				 
+				 // 6. Authenticate the user
+				 // Now, user is authenticated
+				 SecurityContextHolder.getContext().setAuthentication(auth);<7>
+			}
+			
+		} catch (Exception e) {
+			// In case of failure. Make sure it's clear; so guarantee user won't be authenticated
+			SecurityContextHolder.clearContext();<8>
+		}
+		
+		// go to the next filter in the filter chain
+		chain.doFilter(request, response);<9>
+    }
+}
+----
+
+<1> l'instance des constantes est sauvegardée.
+<2> le header est lue à la clé _Authorization_
+<3> si le header est null ou qu'il ne contient pas _Bearer_ pas la peine de vérifier le token. La requête ne passera que si il s'agit de _api/auth/_
+<4> La constante _Bearer_ est supprimée du header.
+<5> Il faut maintenant extraire les informations du token. Pour cela, il faut utiliser la clé secrète, parser le token . Cela signifie que le header doit être codifié en terme de mot clés (username, password, authorities,...)https://stormpath.com/blog/beginners-guide-jwts-in-java
+<6> La classe en charge de contenir les informations est instancié, les champs valorisés.
+<7> Puis sauvegardée dans le contexte. Celui-ci est attaché au thread courant.
+<8> En cas de soucis on vide le contexte de securité.
+<9> Ne jamais casser la chaîne.
+
+.Autorities vs role
+
+Les "autorities" peuvent être vues comme une sorte de privilèges. Leur nom est libre. Lorsque l'on veut restreindre certaines fonctions avec _hasAuthority('READ_AUTH')_, on le fait avec une granularité fine.
+*Le nom est arbitraire*
+
+Les *roles* sont un principe similaire, excepté que leurs noms sont préfixés par _ROLE_. Ce préfix est configurable.
+Lorsque l'on utilise des restrictions telle que _hasRole("ADMIN")_, on le fait de manière grossière.
+
+== Service d'authentification ==
+
+Pour gérer l'authentification, un microservice est ajouté. Il est en charge de la validation du mot de passe et de la fourniture du token.
+
+=== Dépendances ===
+
+Les habituels web,devtools, eureka client. On y ajoute security et jjwt.
+
+=== Les même constantes ou presque ... ===
+
+[source,java]
+----
+@Getter
+public final class JwtConfig {
+    /** default value : /auth/**  */
+    @Value("${security.jwt.uri:/auth/**}")<1>
+    private String uri;
+
+    /** default value : Authorization */
+    @Value("${security.jwt.header:Authorization}")
+    private String header;
+
+    // Default value Bearer
+    @Value("${security.jwt.prefix:Bearer }")
+    private String prefix;
+        
+    // default value : 1 day    
+    @Value("${security.jwt.expiration:#{24*60*60}}")
+    private int expiration;
+        
+    // default value JwtsecretKey
+    @Value("${security.jwt.secret:JwtSecretKey}")
+    private String secret;   
+}
+----
+
+<1> A noter que cette constante a changé, le préfixe _/api/_ a disparu.
+On aurait pu créer un projet commun dans lequel on aurait mis cette classe de constante. Cela aurait évité la duplication de cette classe. Le préfixe _api_ aurait été ajouté.
+
+=== Configurons ===
+
+A l'image de ce qui a été fait dans la gateway pour définir la sécurité,  il faut une implémentation de la classe _WebSecurityConfigurerAdapter_.
+
+[source,java]
+----
+@EnableWebSecurity
+public  class SecurityCredentialsConfig extends WebSecurityConfigurerAdapter  {
+
+    @Autowired
+    UserDetailsService userDetailsService; <1>
+
+    @Autowired
+    JwtConfig jwtConfig; <2>
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http
+		    .csrf().disable()
+		     // make sure we use stateless session; session won't be used to store user's state.
+	            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+	        .and()
+	            // handle an authorized attempts 
+	            .exceptionHandling().authenticationEntryPoint((req, rsp, e) -> rsp.sendError(HttpServletResponse.SC_UNAUTHORIZED))
+	        .and()
+		   	// The filter needs this auth manager to authenticate the user.
+		    .addFilter(new JwtUsernameAndPasswordAuthenticationFilter(authenticationManager(), jwtConfig)) <3>	
+		.authorizeRequests()
+		    // allow all POST requests 
+		    .antMatchers(HttpMethod.POST, jwtConfig.getUri()).permitAll() <4>
+		    // any other requests must be authenticated
+		    .anyRequest().authenticated();
+    }
+
+	@Override
+	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+		auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());<5>
+	}
+	
+	@Bean
+	public JwtConfig jwtConfig() {
+        	return new JwtConfig();
+	}
+	
+	@Bean
+	public BCryptPasswordEncoder passwordEncoder() {
+	    return new BCryptPasswordEncoder();<6>
+	} 
+}
+----
+
+<1> Injection de dépendance pour la gestion des users et password
+<2> Injection de dépendance pour la classe de constante.
+<3> Définition d'un filtre spécifique pour la gestion des user et password. Qu'est ce que _authenticationManager()_? Un objet fourni par _WebSecurityConfigurerAdapter_, utilisé pour authentifier les users. En lien avec le point 5.
+<4> La route d'authentification n'est pas protégé.
+<5> Il faut définir un service pour l'authentification et l'encodage du password
+<6> L'algorithme pour protéger le mot de passe.
+
+
+=== Vérification du password ===
+
+Lorsque l'utilisateur 
+[source,java]
+----
+@Service   // It has to be annotated with @Service.
+public class UserDetailsServiceImpl implements UserDetailsService  {
+	
+	@Autowired
+	private BCryptPasswordEncoder encoder;
+
+	@Override
+	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+		
+		// hard coding the users. All passwords must be encoded.
+		final List<AppUser> users = Arrays.asList(
+			new AppUser(1, "omar", encoder.encode("12345"), "USER"),
+			new AppUser(2, "admin", encoder.encode("12345"), "ADMIN")
+		);
+		
+
+		for(AppUser appUser: users) {
+			if(appUser.getUsername().equals(username)) {
+				
+				// Remember that Spring needs roles to be in this format: "ROLE_" + userRole (i.e. "ROLE_ADMIN")
+				// So, we need to set it to that format, so we can verify and compare roles (i.e. hasRole("ADMIN")).
+				List<GrantedAuthority> grantedAuthorities = AuthorityUtils
+		                	.commaSeparatedStringToAuthorityList("ROLE_" + appUser.getRole());
+				
+				// The "User" class is provided by Spring and represents a model class for user to be returned by UserDetailsService
+				// And used by auth manager to verify and check user authentication.
+				return new User(appUser.getUsername(), appUser.getPassword(), grantedAuthorities);
+			}
+		}
+		
+		// If user not found. Throw this exception.
+		throw new UsernameNotFoundException("Username: " + username + " not found");
+	}
+	
+    // A (temporary) class represent the user saved in the database.
+    @Getter
+    @Setter
+	private static class AppUser {
+		private Integer id;
+	    	private String username, password;
+	    	private String role;
+	    
+		public AppUser(Integer id, String username, String password, String role) {
+	    		this.id = id;
+	    		this.username = username;
+	    		this.password = password;
+	    		this.role = role;
+	    	}
+
+		// getters and setters ....
+	}
+}
+----

@@ -1,0 +1,6 @@
+= Architecture type microservices =
+
+----
+Ce document va décrire la mise en place d'une architecture de type "microservice" à l'aide de librairies standard. Il sera question de _service discovery_, _gateway_, _load balancing_
+----
+

@@ -1,0 +1,10 @@
+= Securité avec JWT =
+
+----
+Le flux de sécurité est simple :
+    * Un utilisateur donne ses identifiants pour obtenir un token
+    * Le serveur valide les identifiants et renvoie un token
+    * Avec chaque requête, l'utilisateur doit fournir le token, le serveur validant la requête.
+----
+
+On va ajouter un service pour l'authentification.

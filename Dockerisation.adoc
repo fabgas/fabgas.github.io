@@ -1,0 +1,140 @@
+= Dockerisation de cette application =
+
+----
+L'application précédente nécessite de démarrer 3 instances de manière manuelles.
+Pour chaque module, il faut executer l'application dans des fenêtres différentes.
+Pour simplifier le processus, on va dockeriser cette application.
+----
+
+NOTE: En réalité, la simplication n'est qu'apparente, il est compliqué de debugger une application docker. Dockeriser une application simplifie le déploiement.
+
+== Dockerisation d'un module ==
+
+La création de l'image d'un module est simple dans le cas de notre application. Il suffit de créer un fichier *Dockerfile*.
+
+
+.Dockerfile
+----
+FROM java:8-jre <1>
+
+ENV MICROSERVICE_FILE target/commandes-0.0.1-SNAPSHOT.jar <2>
+
+EXPOSE 8300 <3>
+
+COPY $MICROSERVICE_FILE $MICROSERVICE_HOME/ <4>
+
+
+WORKDIR $MICROSERVICE_HOME
+ENTRYPOINT ["sh", "-c"]
+CMD ["java  -jar commandes-0.0.1-SNAPSHOT.jar"] <5>
+----
+
+<1> pour executer notre application, on a uniquement besoin de _java_.
+<2> On créé une variable d'environnement pour référencer l'executable
+<3> On indique que le port 8300 va être accessible à l'extérieur. _Dans le cas du module commandes, cela est nécessaire. Pour le module produits, pas nécessaire car accéder uniquement entre container_.
+<4> Copie de l'éxécutable vers le répertoire Docker
+<5> Execution de l'executable.
+
+WARNING: La version du jar doit pouvoir être externalisé. A voir comment faire.
+
+Comme cela ne fonctionne plus sous le windows classique, quelques changements sont nécessaires dans les adresses (host) des différents services configurés dans le fichier _application.properties_.
+
+.Modification de certains host. Exemple du fichier properties de _commandes_.
+----
+eureka.client.serviceUrl.defaultZone=http://serviceregistry:8761/eureka
+----
+
+Le localhost a été remplacé par _serviceregistry_ qui sera le nom du service(image) du module de service-registry dans Docker.
+
+La communication se faire entre container et ne passe pas par le localhost.
+
+*Il n'y a pas d'autres modifications nécessaires*
+
+
+== Mettre tout cela ensemble ==
+
+Bon, on a 3 fichiers *Dockerfile*, et alors ...
+
+Il faut les assembler pour qu'ils fonctionnent ensemble.
+
+Pour cela on a utiliser l'outil *docker-compose*. Il permet d'assembler des images Docker ensemble.
+
+Notre but est de faire fonctionner nos trois modules (commandes, produits, service-registry).
+
+La première étape va consister a écrire un script pour constuire les images. Cela se fera dans la machine Docker.
+
+.build.sh
+----
+docker build -t "tutorial/commandes" ../commandes <1>
+docker build -t "tutorial/produits" ../produits
+docker build -t "tutorial/serviceregistry" ../serviceregistry
+----
+
+<1> on construit une image en indiquant le nom de l'image ("tutorial/commandes) et le chemin  vers le fichier _Dockerfile_.
+
+Ce script permet donc de cosntruire les 3 images.
+
+Il reste à écrire le paramétrage du _docker-compose_.
+
+.Fichier docker-compose.yml au format yaml.
+----
+version: "3"
+
+services:
+  
+  serviceregistry: <1>
+    image: tutorial/serviceregistry <2>
+    ports:
+      - "8761:8761" <3>
+  produits:
+    image: tutorial/produits  
+    links:
+      - serviceregistry <4>
+  commandes:
+    image: tutorial/commandes
+    ports:
+      - "8300:8300" <6>
+    links:
+      - serviceregistry
+      - produits <5>
+----
+
+<1> Chaque container à un nom. On retrouve le nom utilisé dans les fichiers _applications.properties_
+<2> on indique l'image à démarrer dans ce container. Même nom que dans le script de build.
+<3> Ici, le port 8761 est exposé à l'extérieur (pour le monitoring).
+<4> Il faut lier les container entre eux pour qu'ils puissent communiquer entre eux. Le container _produits_ doit communiquer avec le service registry.
+<5> En plus du _serviceregisry_, le module _commandes_ va appeler un service du container _produits_.
+<6> on expose le port 8300 pour pouvoir appeler l'uri _/commandes_
+
+Dans une machine docker, il suffit d'exécuter la commande _docker-compose up_.
+
+Les trois container démarrent, ils finissent par s'enregistrer auprès du service registry.
+
+Pour tester, il faut appeler l'uri _commandes_ avec l'ip de la machine docker (docker-machine  ip) sur le port 8300.
+
+== Y'a pas que Docker ! ==
+
+Les fichiers de configuration (_application.properties_) ont été modifié pour que cela fonctionne avec Docker. Il a notamment fallut modifier l'url du serveur Eureka en remplacant _localhost_ par le nom du container _serviceregistry_.
+
+Seulement, cette configuration ne peut fonctionner en local. Pour introduire une cohabitation, on va dupliquer les fichiers de _application.properties_ en ajoutant _-docker_ à la copie.
+Dans chaque module on aura ainsi un fichier _application.properties_ et un fichier _application-docker.properties_.
+En démarrant les instances avec l'option   *-Dspring.profiles.active=docker* ,  spring va automatiquement utiliser les bons fichiers de properties.
+
+
+NOTE: L'utilisation de Docker ne paraît pas indispensable avec une application aussi simple. Mais maintenant si on ajoute une base de données, un broker (RabbitMq), Elastic search par exemple... la configuration se compliquera !.
+
+Par exemple en ajoutant quelques lignes on peut ajouter une instance de rabbitmq:
+
+.Démarrage de rabbitMq parmis les autres containers
+----
+ rabbitmq:
+    image: bitnami/rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_USERNAME=fg
+      - RABBITMQ_PASSWORD=fg
+----
+
+Les containers qui souhaitent communiquer avec rabbitmq devront l'ajouter dans la liste de leurs _links_.
