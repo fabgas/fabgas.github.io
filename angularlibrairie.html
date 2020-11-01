@@ -665,6 +665,31 @@ Il faut rebuilder la librairie pour quelle soit utilisable
 </table>
 </div>
 </div>
+<div class="sect2">
+<h3 id="trueajout-d-une-d-pendance-dans-la-librairie"><a class="anchor" href="#trueajout-d-une-d-pendance-dans-la-librairie"></a>Ajout d&#8217;une dépendance dans la librairie</h3>
+<div class="paragraph">
+<p>La librairie peut nécessite ces propres dépendances. L&#8217;ajout de celles-ci se fait de manière classique.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>npm i ng2-charts --save</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Mais on obtient un message d&#8217;erreur <em>Dependency ng2-charts must be explicitly whitelisted.</em></p>
+</div>
+<div class="listingblock">
+<div class="title">ng-package.json</div>
+<div class="content">
+<pre>"whitelistedNonPeerDependencies": [
+    "."
+  ]</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Il faut également ajouter la librairie comme dépendance de l&#8217;application principale.</p>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -905,6 +930,211 @@ Attention les deux repository peuvent travailler sur des branches différentes.
 </div>
 </div>
 <div class="sect1">
+<h2 id="truepasser-des-param-tres-de-l-application-vers-la-librairies"><a class="anchor" href="#truepasser-des-param-tres-de-l-application-vers-la-librairies"></a>Passer des paramètres de l&#8217;application vers la librairies</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Je veux passer des paramètres à la librairie (peu importe ces paramètres), comment faire sachant que la librairie ne doit pas connaître l&#8217;application. Il doit s&#8217;agir de paramètres globaux et constant. D&#8217;autres paramètres spécifiques à un composant peuvent être transmis via un <strong>@Input</strong>. On peut par exemple citer une url que seul l&#8217;application connaît.</p>
+</div>
+<div class="sect2">
+<h3 id="truelibrairie"><a class="anchor" href="#truelibrairie"></a>Librairie</h3>
+<div class="paragraph">
+<p>La première étape consiste à construire un objet recevant les paramètres et un service pour les injecter</p>
+</div>
+<div class="listingblock">
+<div class="title">libConfig.ts : paramètres à injecter</div>
+<div class="content">
+<pre>import { InjectionToken } from '@angular/core';
+
+/**
+ * Injection de configurations dans cette librairie
+ *  url : adresse du serveur
+ */
+export interface LibConfig {
+  url: string;<i class="conum" data-value="1"></i><b>(1)</b>
+}
+export const LibConfigService = new InjectionToken&lt;LibConfig&gt;('LibConfig');<i class="conum" data-value="2"></i><b>(2)</b></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>paramètres que l&#8217;on pourrait transmettre</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>service permettant d&#8217;injecter des informations non décrit dans une instance (inteface).</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Dans le module de la librairie, i lfaut déclarer une méthode forRoot(standard) et ajouter une des objets en paramètre</p>
+</div>
+<div class="listingblock">
+<div class="title">indic-lib.module.ts : fichier du module de la librairie</div>
+<div class="content">
+<pre>export class IndicLibModule {
+  static forRoot(config: LibConfig): ModuleWithProviders {
+    return {
+      ngModule: IndicLibModule, <i class="conum" data-value="1"></i><b>(1)</b>
+      providers: [
+        {
+          provide:  LibConfigService, <i class="conum" data-value="2"></i><b>(2)</b>
+          useValue: config <i class="conum" data-value="3"></i><b>(3)</b>
+        }
+      ]
+    };
+  }
+}</pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>désignation du module</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Instanciation du service</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Paramètres à passer au service lors de son instanciation</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>l&#8217;utilisation de ce service se fait simplement</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>export class IndicLibComponent   {
+  public libConfig: LibConfig;
+  constructor(@Inject(LibConfigService) public config) {
+    this.libConfig = config;
+  }
+  public getConfig(): LibConfig {
+    return this.libConfig;
+  }
+}</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="trueapplication"><a class="anchor" href="#trueapplication"></a>Application</h3>
+<div class="paragraph">
+<p>Enfin, il faut bien fournir les paramètres à la librairie depuis l&#8217;application. Lors de la déclaration du module , il suffit de passer les bonnes valeurs :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>IndicLibModule.forRoot({
+      url: environment.endPoint })</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="truegestion-du-style-de-la-librairie"><a class="anchor" href="#truegestion-du-style-de-la-librairie"></a>Gestion du style de la librairie</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Une librairie angular va nécessairement utiliser un style particulier. Ce style doit être importé dans l&#8217;application pour pouvoir s&#8217;appliquer.</p>
+</div>
+<div class="paragraph">
+<p>Si on imagine que la librairie a défini un style dans un fichier <strong>"__styles.scss"</strong>.
+Ce fichier doit être importé dans l&#8217;application si l&#8217;on souhaite l&#8217;utiliser.</p>
+</div>
+<div class="paragraph">
+<p>Au niveau du styles.scss, il faut importer le fichier</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>@import '../projects/galma/indic-lib/src/lib/themes';</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ou dans le fichier angular.json avec l&#8217;autre style</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>"styles":
+    [
+        "projects/galma/indic-lib/src/lib/_variables.scss",
+        "src/styles.scss"
+    ]</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>lorsque la librairie est dans le répertoire module, le chemin doit s&#8217;adapter.</p>
+</div>
+<div class="paragraph">
+<p>Dans ce cas on import uniquement les variables (les couleurs par exemple).
+Ces variables ne peuvent être surchargées!</p>
+</div>
+<div class="paragraph">
+<p>Les classes définies dans les fichiers peuvent elles êtres modifiés.
+Par exemple dans la librairie, la classe suivante est déclarée :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>.container {
+    background-color: $color-red;
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>la surcharge dans l&#8217;application peut être faite ainsi</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>.container {
+    background-color: blue !important;
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>(sans l&#8217;import ca marche également, ce qui est bizarre)</p>
+</div>
+<div class="paragraph">
+<p>En réalité, il semble y avoir une phase de compilation en scss qui rend la sucharge complexe.</p>
+</div>
+<div class="paragraph">
+<p>L&#8217;utilisation des variables css(3) permet plus facilement cette surcharge.</p>
+</div>
+<div class="paragraph">
+<p>Dans la librairie angular, dans un fichier dédiés on déclare un certains nombre variables</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>:root {
+    --color-background : #FFFF00
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Ensuite cette variable est utilisée dans un composant (classe container).</p>
+</div>
+<div class="paragraph">
+<p>Dans l&#8217;application principale, on importe le fichier contenant les variables.</p>
+</div>
+<div class="paragraph">
+<p>Dans le fichier styles.scss, il est possible de redéclarer les variables.</p>
+</div>
+<div class="listingblock">
+<div class="title">style.(s)css</div>
+<div class="content">
+<pre>:root {
+    --color-back: #ac7070;
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p><a href="https://www.usefuldev.com/post/Angular%209%20update:%20creating%20a%20library%20that%20supports%20Angular%20Material%20theming%20is%20easier%20now" class="bare">https://www.usefuldev.com/post/Angular%209%20update:%20creating%20a%20library%20that%20supports%20Angular%20Material%20theming%20is%20easier%20now</a></p>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="trueautres-liens"><a class="anchor" href="#trueautres-liens"></a>Autres liens</h2>
 <div class="sectionbody">
 <div class="paragraph">
@@ -915,7 +1145,7 @@ Attention les deux repository peuvent travailler sur des branches différentes.
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-10-31 15:55:33 PM
+Last updated 2020-11-01 08:18:11 PM
 </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.9.1/styles/github.min.css">
