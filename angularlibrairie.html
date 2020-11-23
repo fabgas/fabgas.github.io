@@ -974,7 +974,7 @@ export const LibConfigService = new InjectionToken&lt;LibConfig&gt;('LibConfig')
 <div class="title">indic-lib.module.ts : fichier du module de la librairie</div>
 <div class="content">
 <pre>export class IndicLibModule {
-  static forRoot(config: LibConfig): ModuleWithProviders {
+  static forRoot(config: LibConfig): ModuleWithProviders&lt;IndicLibModule&gt; {
     return {
       ngModule: IndicLibModule, <i class="conum" data-value="1"></i><b>(1)</b>
       providers: [
@@ -1142,10 +1142,223 @@ Par exemple dans la librairie, la classe suivante est déclarée :</p>
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="truecommandes-execut-es-pour-cr-ation-librairie"><a class="anchor" href="#truecommandes-execut-es-pour-cr-ation-librairie"></a>Commandes executées pour création librairie</h2>
+<div class="sectionbody">
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>ng new basicproject</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>git remote add origin <a href="#url">[url]</a></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>ng g library @avw/manager-suivi --prefix=ms</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>cd <a href="#lib">[lib]</a></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>git remote add origin <a href="#url">[url]</a></td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>git push  repos</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>git submodule add <a href="#url">[url]</a> projects/avw/manager-suivi</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="8"></i><b>8</b></td>
+<td>git push main repo</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="9"></i><b>9</b></td>
+<td>ng build <a href="#library name">[library name]</a></td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="truelazy-loading-ajouter-de-chemins"><a class="anchor" href="#truelazy-loading-ajouter-de-chemins"></a>Lazy Loading: ajouter de chemins</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Avant Ivy, pour ajouter des chemins, il fallait passer par un module Wrapper dans lequel on importait la librairie .
+Puis dans les route on pouvait faire</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre> loadChildren : './wrapper/wrapper.module#WrapperModule'</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Ainsi les routes définis dans la librairie étaient prise en compte</p>
+</div>
+<div class="paragraph">
+<p>Dans les versions suivantes, il faut utiliser</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>loadChildren : () =&gt; import('@avw/manager-suivi').then(m =&gt;m.ManagerSuiviModule)</pre>
+</div>
+</div>
+</div>
+</div>
+<h1 id="truegestion-d-un-projet-avec-de-multiples-librairies" class="sect0"><a class="anchor" href="#truegestion-d-un-projet-avec-de-multiples-librairies"></a>Gestion d&#8217;un projet avec de multiples librairies</h1>
+<div class="sect1">
+<h2 id="trueajout-de-librairie-dans-d-autres-librairies"><a class="anchor" href="#trueajout-de-librairie-dans-d-autres-librairies"></a>Ajout de librairie dans d&#8217;autres librairies</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Si l&#8217;on veut ajouter une librairie builder il faut modifier le fichier tsconfig.lib.ts et y ajouter :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>    "paths": {
+      "@mymoney/model": [
+        "dist/mymoney/model"
+      ]}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>dans les compilerOptions</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="trueexporter-un-model"><a class="anchor" href="#trueexporter-un-model"></a>Exporter un model</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>modifier le public.api.ts</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="trueexporter-un-service"><a class="anchor" href="#trueexporter-un-service"></a>Exporter un service</h2>
+<div class="sectionbody">
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Définir normalement son service</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Le déclarer dans les providers du module de la librairie</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>L&#8217;ajouter dans les public-api.ts</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+tester sans faire de provider dans la librairie
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Comment faire le lien
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="trueutiliser-une-librairie-tierce-dans-une-librairie-de-dev"><a class="anchor" href="#trueutiliser-une-librairie-tierce-dans-une-librairie-de-dev"></a>Utiliser une librairie tierce dans une librairie de dev</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Très bien, on a notre librairie de services, celles contenant les modèles et maintenant celle de l&#8217;UI.
+Seulement la présentation laisse à désirer, pour améliorer le rendu on va utiliser @angular\material.</p>
+</div>
+<div class="paragraph">
+<p>La première question est ou poser ses dépendences :</p>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Dans le package  principale de l&#8217;application et en peerDependies de la librairie ui</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Uniquemement dans la librairie ui.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>La première solution est la meilleure, car i lest probablement que l&#8217;application aura également besoin d'@angular/material. L&#8217;ajouter au peerDependencies de la librairie permet de fixer les versions</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>ng add @angular/material</pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/dependencies.png" alt="dependencies.png">
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/peerDependencies.png" alt="peerDependencies.png">
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="truecompilation-chaud"><a class="anchor" href="#truecompilation-chaud"></a>Compilation à chaud</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Avec une telle configuration, pour voir les changements dans une librairie il faut recompiler avec :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>npm run build-all</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Cela n&#8217;est pas compatible avec un dev efficace ou l&#8217;on souhaite voir les changements en direct.</p>
+</div>
+<div class="paragraph">
+<p>Tout est lié aux imports.
+Lorsque l&#8217;on a construit les routes l&#8217;import s&#8217;est fait via un @mymonet/ui. Dès lors ce sont les fichiers situés dans le répertoire /dist/** qui sont utilisés.</p>
+</div>
+<div class="paragraph">
+<p>Pour avoir une recharge à chaud, il faut faire un import sur le répertoire de dev :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>loadChildren : () =&gt; import('./../../projects/mymoney/ui/src/lib/ui.module').then(m=&gt;m.UiModule)</pre>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-11-01 08:18:11 PM
+Last updated 2020-11-23 08:13:28 PM
 </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.9.1/styles/github.min.css">
