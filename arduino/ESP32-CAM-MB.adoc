@@ -1,0 +1,12 @@
+= ESP32-CAM-MB =
+
+Il s'agit d'un module contenant les éléments suivants :
+ 
+ - un module *ESP32* : wifi et bluetooth
+ - une caméra OV2640 (2M de pixels)
+ - un lecteur MicroSD
+ - un port USB (alimentation + entrée).
+ 
+ Cet assemblage permet de construire des applications mettant en oeuvre une caméra avec au choix sauvegarde des fichiers sur la carte mSD, du streaming via un serveur Web ,... Tout cela facilité par la présence de la prise USB permettant de facilement mettre à jour le controlleur.
+ 
+ 

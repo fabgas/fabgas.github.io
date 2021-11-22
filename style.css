@@ -1,0 +1,9 @@
+h1 {
+    background-color: #0077c2;
+    color : white;
+    text-transform: uppercase;
+    padding: 10px;
+}
+ul {
+    font: 1.5em sans-serif;
+}
