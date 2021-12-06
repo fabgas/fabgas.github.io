@@ -16,6 +16,7 @@
 	<h1> GCP</h1>
 	<ul>
 		<li><a href="gcloud-config.html">configuration</a></li>
+		<li><a href="theming-material.html">Material themes</a></li>
 	</ul>
 	<h1> Angular</h1>
 	<ul>

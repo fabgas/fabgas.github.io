@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.16">
+<meta name="author" content="Firstname Lastname">
+<title>Appliquer un style à un composant material</title>
+<style>
+/* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
+
+@import url(https://fonts.googleapis.com/css?family=Cabin+Sketch|Architects+Daughter);
+@import url(https://cdn.jsdelivr.net/gh/asciidoctor/asciidoctor@2.0/data/stylesheets/asciidoctor-default.css); /* Default asciidoc style framework - important */
+
+/* CUSTOMISATIONS */
+/* Change the values in root for quick customisation. If you want even more fine grain... venture further. */
+:root{
+--maincolor:#FFFFFF;
+--primarycolor:#000000;
+--secondarycolor:#1a237e;
+--tertiarycolor:#CCCCCC;
+--highlightcolor: #ffd600;
+--sidebarbackground:#CACACA;
+--linkcolor:#0D47A1;
+--linkcoloralternate:#B71C1C;
+--stickynote: #e8e8e8;
+--white:#FFFFFF;
+--black:#000000;
+--title:#311b92
+}
+
+/* Text styles */
+
+body{font-family: "Architects Daughter",sans-serif;background-color: #fff;background-size: 100% 1.2em;}
+
+h1{color:var(--primarycolor) !important;font-family:"Cabin Sketch",sans-serif;}
+h2,h3{color:var(--title) !important;font-family:"Cabin Sketch",sans-serif;font-weight:bold;text-decoration: underline;}
+h4,h5,h6{color:var(--black) !important;font-family:"Cabin Sketch",sans-serif;font-weight:bold;text-decoration: underline;}
+.title{color:var(--black) !important;font-family:"Architects Daughter",sans-serif;font-style: normal; font-weight: normal;}
+/*a{text-decoration: none;}*/
+p{font-family: "Architects Daughter",sans-serif ! important}
+#toc.toc2 a:link{color:var(--linkcolor); font-family: "Architects Daughter" !important}
+blockquote{color:var(--secondarycolor) !important}
+.quoteblock{color:var(--black)}
+.quoteblock blockquote:before{color:var(--black)}
+code{color:var(--highlightcolor);background-color: var(--black) !important}
+mark{background-color: var(--highlightcolor)} /* Text highlighting color */
+pre{background-color: var(--stickynote) !important;color:var(--secondarycolor);font-family: monospace;}
+
+/* Table styles */
+th{background-color: var(--maincolor);color:var(--black) !important;}
+td{background-color: var(--maincolor);color: var(--black) !important}
+
+
+#toc.toc2{background-color:var(--sidebarbackground);font-family: "Architects Daughter",sans-serif;}
+#toctitle{color:var(--primarycolor); font-family: "Cabin Sketch"}
+
+.literalblock > .content pre, .listingblock > .content pre {
+    background: #eeeeee;
+    border-width: 1px;
+    border-style: dashed;
+    border-color: #666666;
+    -webkit-border-radius: 0;
+    border-radius: 0;
+    padding: 1.25em 1.5625em 1.125em 1.5625em;
+    word-wrap: break-word;
+    }
+.conum {
+      display: inline-block;
+       color: white;
+       background-color: black;
+       border-radius: 100px;
+       text-align: center;
+       width: 18px;
+       height: 18px;
+       font-size: 12px;
+       font-weight: bold;
+       line-height: 18px;
+       font-family: Arial, sans-serif;
+       font-style: normal;
+       position: relative;
+       top: -1px;
+    }
+}
+ol li::marker {
+  color: var(--secondarycolor);
+  font-weight: bold;
+}
+
+/* Responsiveness fixes */
+video {
+  max-width: 100%;
+}
+
+@media all and (max-width: 600px) {
+table {
+  width: 55vw!important;
+  font-size: 3vw;
+}
+}
+
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body class="article">
+<div id="header">
+<h1>Appliquer un style à un composant material</h1>
+<div class="details">
+<span id="author" class="author">Firstname Lastname</span><br>
+<span id="email" class="email"><a href="mailto:author@asciidoctor.org">author@asciidoctor.org</a></span><br>
+<span id="revnumber">version 3.0,</span>
+<span id="revdate">July 29, 2022</span>
+<br><span id="revremark">AsciiDoc article template</span>
+</div>
+<div id="toc" class="toc">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_composant_standard">Composant standard</a></li>
+<li><a href="#_jouer_avec_les_thèmes">Jouer avec les thèmes</a>
+<ul class="sectlevel2">
+<li><a href="#_modifier_globalement_la_palette">Modifier globalement la palette</a></li>
+<li><a href="#_définition_dun_thème">Définition d&#8217;un thème</a></li>
+<li><a href="#_ajouter_plusieurs_thèmes">Ajouter plusieurs thèmes</a></li>
+</ul>
+</li>
+<li><a href="#_modification_de_laspect_du_bouton">Modification de l&#8217;aspect du bouton</a></li>
+<li><a href="#_sass">Sass</a>
+<ul class="sectlevel2">
+<li><a href="#_mixin">Mixin</a></li>
+<li><a href="#_les_fonctions">Les fonctions</a></li>
+<li><a href="#_conditions_et_boucles">Conditions et boucles</a></li>
+<li><a href="#_imbrication_des_règles">Imbrication des règles</a></li>
+<li><a href="#_les_partials">Les partials</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Le but de ce document est de décrire comment appliquer un thème à un composant material.
+Initialement, ce composant aura le thème standard et il s&#8217;agit d&#8217;atteindre un nouveau style.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_composant_standard">Composant standard</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Le composant choisi comme cible sera le bouton : <strong>mat-button</strong>.</p>
+</div>
+<div class="paragraph">
+<p>Après avoir construit un projet Angular à l&#8217;aide de ng new, l&#8217;exemple des boutons du site material est pris comme composant de base.
+L&#8217;aspect de l&#8217;application est alors le suivant</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/button-initial.png" alt="button initial">
+</div>
+</div>
+<div class="paragraph">
+<p>Les buts est de comprendre comment modifier certaines propriétés de ce composant/</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>modifier les couleurs standard</p>
+</li>
+<li>
+<p>modifier le style du bouton (bordure, font)</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_jouer_avec_les_thèmes">Jouer avec les thèmes</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_modifier_globalement_la_palette">Modifier globalement la palette</h3>
+<div class="paragraph">
+<p>Pour modifier les couleurs globalement (et donc également pour un bouton de base), il faut redéfinir la palette.
+En material / saas, la palette est définie dans une map qui contient les teintes de la palette et une sous-map contient la couleur de contraste pour chacune des teintes. La palette de contraste sert à définir la couleur du texte lorsque la couleur de base est utilisée en background.</p>
+</div>
+<div class="listingblock">
+<div class="title">Exemple de palette</div>
+<div class="content">
+<pre>$indigo-palette: (
+ 50: #e8eaf6,
+ 100: #c5cae9,
+ 200: #9fa8da,
+ 300: #7986cb,
+ // ... continues to 900
+ contrast: (
+   50: rgba(black, 0.87),
+   100: rgba(black, 0.87),
+   200: rgba(black, 0.87),
+   300: white,
+   // ... continues to 900
+ )
+);</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Les couleurs, palettes sont définis dans le fichier <em>  _palette.scss</em> se trouvant dans @angular/material/core/theming</p>
+</div>
+<div class="paragraph">
+<p>On peut définir notre propre palette. Pour cela il faut construire une map contenant une valeur pour 50 et chaque centaine entre 100 et 900, soit dix couleurs. Il faut y ajouter la map de contraste.</p>
+</div>
+<div class="paragraph">
+<p>Pour s&#8217;aider, il est possible d&#8217;utiliser cet outil :https://material.io/design/color/the-color-system.html#tools-for-picking-colors</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_définition_dun_thème">Définition d&#8217;un thème</h3>
+<div class="paragraph">
+<p>Pour définir  son propre theme, il faut créer un fichier _theme.scss</p>
+</div>
+<div class="listingblock">
+<div class="title">_themes.scss</div>
+<div class="content">
+<pre>@import '~@angular/material/theming'; <i class="conum" data-value="1"></i><b>(1)</b>
+@include mat-core();
+
+$my-app-primary: mat-palette($mat-blue-grey); <i class="conum" data-value="2"></i><b>(2)</b>
+$my-app-accent:  mat-palette($mat-pink, 500, 900, A100); <i class="conum" data-value="3"></i><b>(3)</b>
+$my-app-warn:    mat-palette($mat-deep-orange);<i class="conum" data-value="4"></i><b>(4)</b>
+$my-app-theme: mat-light-theme($my-app-primary, $my-app-accent, $my-app-warn); <i class="conum" data-value="5"></i><b>(5)</b>
+
+@include all-component-themes($my-app-theme);<i class="conum" data-value="6"></i><b>(6)</b></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Import du thème d&#8217;angular material</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Redéfinition de la couleur "primary". $mat-blue-grey correspond à la palette blue-grey</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Redéfinition de la couleur "accent"</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Redéfinition de la couleur "warn"</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Création de la variable theme en reprenant les trois couleurs précédentes</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>appel de la fonction  <em>angular-material-theme</em></td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>et déclarer ce fichier dans la liste des styles .</p>
+</div>
+<div class="listingblock">
+<div class="title">angular.json</div>
+<div class="content">
+<pre>"styles": [
+  "styles.css",
+  "_themes.scss"
+]</pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/button-firsttheme.png" alt="button firsttheme">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_ajouter_plusieurs_thèmes">Ajouter plusieurs thèmes</h3>
+<div class="paragraph">
+<p>Il est possible de créer des thèmes alternatif en imbriquant une définition de thème dans une classe à un élément parent pour que le thème alternatif prenne effet.</p>
+</div>
+<div class="paragraph">
+<p>Chaque variable se voit attribuer une couleur. L&#8217;utilisation de la fonction <em>mat-palette</em> permet d&#8217;utiliser les palettes définies par angular material. Elle prend en premier argument un nom de couleur, les trois autres argument étant la valeur par default, une valeur plus brillante et une valeur sombre.</p>
+</div>
+<div class="listingblock">
+<div class="title">_themes.scss</div>
+<div class="content">
+<pre>@import '~@angular/material/theming';
+@include mat-core();
+$my-app-primary: mat-palette($mat-blue-grey);
+$my-app-accent:  mat-palette($mat-pink, 500, 900, A100);
+$my-app-warn:    mat-palette($mat-deep-orange);
+$my-app-theme:   mat-light-theme($my-app-primary, $my-app-accent, $my-app-warn);
+@include all-component-themes($my-app-theme);
+
+.alternate-theme { <i class="conum" data-value="1"></i><b>(1)</b>
+  $alternate-primary: mat-palette($mat-light-blue);
+  $alternate-accent:  mat-palette($mat-yellow, 400);
+  $alternate-theme: mat-light-theme($alternate-primary, $alternate-accent);
+@include  all-component-themes($alternate-theme);<i class="conum" data-value="2"></i><b>(2)</b>
+}</pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+dans les précédentes versions d&#8217;angular material (&lt;13) la fonction utilisée était <em>angular-material-theme</em>, dorénavant il semblerait que ce soit <em>all-component-themes</em>.
+</td>
+</tr>
+</table>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Définition de la classe qui va contenir le thème alternatif.
+&lt;2&gt;Ajout du thème dans la liste des thèmes.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>il suffit d&#8217;indiquer le nom de la classe dans le html, sur un tag, pour quelle soit utilisée.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>&lt;section class="alternate-theme"&gt;
+  &lt;div class="example-label"&gt;Flat&lt;/div&gt;
+  &lt;div class="example-button-row"&gt;
+    &lt;button mat-flat-button&gt;Basic&lt;/button&gt;
+    &lt;button mat-flat-button color="primary"&gt;Primary&lt;/button&gt;
+    &lt;button mat-flat-button color="accent"&gt;Accent&lt;/button&gt;
+    &lt;button mat-flat-button color="warn"&gt;Warn&lt;/button&gt;
+    &lt;button mat-flat-button disabled&gt;Disabled&lt;/button&gt;
+    &lt;a mat-flat-button href="https://www.google.com/" target="_blank"&gt;Link&lt;/a&gt;
+  &lt;/div&gt;
+&lt;/section&gt;</pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/alternate-theme.png" alt="alternate theme">
+</div>
+</div>
+<div class="paragraph">
+<p>Les counleurs sont prises dans des palettes.  Dans la ligne</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre> $alternate-primary: mat-palette($mat-light-blue);</pre>
+</div>
+</div>
+<div class="paragraph">
+<p><em>$mat-light-blue</em> est une des palettes de material angular. La liste des palettes est disponibles dans le fichier <em> _palette.scss (@angular/material/core) </em></p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_modification_de_laspect_du_bouton">Modification de l&#8217;aspect du bouton</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="https://betterprogramming.pub/best-way-to-overwrite-angular-materials-styles-e38dc8b84962" class="bare">https://betterprogramming.pub/best-way-to-overwrite-angular-materials-styles-e38dc8b84962</a></p>
+</div>
+<div class="paragraph">
+<p>L&#8217;objectif de cette partie est de modifier l&#8217;aspect du bouton.</p>
+</div>
+<div class="paragraph">
+<p>Pour comprendre le styling du bouton, il faut analyser le style par la console de debug du navigateur.
+Dans notre cas, on va chercher à modifier la bordure du bouton. Il faut donc trouver la classe ou la combinaison de classes qui affecte cette partie du bouton.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/dom-button.png" alt="dom button">
+</div>
+</div>
+<div class="paragraph">
+<p>La console montre que la classes qui impacte le style du bouton est <em> .mat-stroked-button</em></p>
+</div>
+<div class="paragraph">
+<p>Il faut donc être en mesure de surcharger cette classe en utilisant sass.</p>
+</div>
+<div class="paragraph">
+<p>Pour cela, il faut :</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>créer un fichier "_button.scss" et y construire le style</p>
+</li>
+<li>
+<p>importer ce fichier dans styles.scss</p>
+</li>
+<li>
+<p>appliquer la classe au bouton</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Pour le point 1, une nouvelle classe <em>my-mat-button</em> permettra d&#8217;appliquer spécifiquement ce style.
+En créant une classe, le style pourra s&#8217;appliquer plus précisément à chacun des composants.</p>
+</div>
+<div class="listingblock">
+<div class="title">_my-button.scss</div>
+<div class="content">
+<pre>.my-mat-button {
+    &amp;.mat-stroked-button {
+      border: 2px solid black;
+      border-radius: 10px;
+  }
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Pour que cette classe puisse être accessible à l&#8217;ensemble de l&#8217;application, le fichier <em>my-button.scss<em>est importé dans le fichier </em>styles.scsss_</em>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>@import "&lt;&lt;chemin&gt;&gt;/my_button.scss";</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Enfin dans le composant, le tag cible se voit attribuer la classe "my-mat-button":</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre> &lt;button  mat-stroked-button   class="my-mat-button" &gt;
+    &lt;mat-icon&gt;home&lt;/mat-icon&gt;
+  &lt;/button&gt;</pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/diff_button.png" alt="diff button">
+</div>
+</div>
+<div class="paragraph">
+<p>A gauche le bouton material et à droite le bouton avec le nouveau style.</p>
+</div>
+<div class="paragraph">
+<p>A l&#8217;aide de SASS i lest possible d&#8217;impacter plusieurs  niveaux dans le DOM.
+En ajoutant des règles pour la même classe, diverses combinaisons peuvent surcharger le style à l&#8217;aide d&#8217;une seule classe. La partie html est non modifiée.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>.my-mat-button {
+    &amp;.mat-stroked-button {
+      border: 2px solid black;
+      border-radius: 10px;
+  }
+   &amp;.mat-stroked-button{
+     cursor: crosshair;
+   }
+}</pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/button-pointer.png" alt="button pointer">
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Dans la console, lorsque les classes sont séparées par des "," il s&#8217;agit de combinaisons différentes.
+</td>
+</tr>
+</table>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/quelle-classe.png" alt="quelle classe">
+</div>
+</div>
+<div class="paragraph">
+<p>Le ciblage de la bonne combinaison dépend de là ou est positionnée la classe.
+Dans ce cas il faut paramétrer les 4 classes pour atteindre le bon niveau lorsque la classe est postionnée au niveau du mat-form-field.</p>
+</div>
+<div class="paragraph">
+<p><strong>Collé ou not collé ?</strong> lorsque dans la déclaration sass deux noms de classes sont collés cela signifie que les deux classes doivent se situer au même niveau dans la hiérarchie.</p>
+</div>
+<div class="paragraph">
+<p>Dans la définition des  rules, il est possible d&#8217;utiliser les mixins et fonctions définies préalablement</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>.my-mat-select {
+  &amp;.mat-form-field .mat-form-field-wrapper .mat-form-field-flex .mat-form-field-infix {
+   margin-top: -0.25em;
+   border : 2px solid mat-color($my-app-primary);
+   border-radius : 8px;
+  }
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Pour appliquer globalement certains styles, il suffit d&#8217;enlever la classe de la règle</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>.my-tab-class {
+  &amp;.mat-tab-group.mat-primary .mat-ink-bar {
+    background-color: mat-color($my-app-primary);
+    height: 4px;
+  }
+}
+
+devient
+
+.mat-tab-group.mat-primary .mat-ink-bar {
+    background-color: mat-color($my-app-primary);
+    height: 4px;
+  }</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_sass">Sass</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Avant d&#8217;aller plus loin il faut s&#8217;arrêter sur les notions propre à SASS tels que la mixin et les fonctions.</p>
+</div>
+<div class="sect2">
+<h3 id="_mixin">Mixin</h3>
+<div class="paragraph">
+<p><a href="https://www.ice-dev.com/decoupe-html-css/sass-lecon-4-les-mixins-et-les-fonctions/" class="bare">https://www.ice-dev.com/decoupe-html-css/sass-lecon-4-les-mixins-et-les-fonctions/</a></p>
+</div>
+<div class="paragraph">
+<p>Une mixin est un morceau de code css, qui peut être paramétrable, réutilisable dans un fichier SASS (scss).Une mixin accèpe des paramètres en entrée (une couleur, une valeur,&#8230;&#8203;).</p>
+</div>
+<div class="paragraph">
+<p>Pour définir une mixin il faut utiliser la directive <strong>@mixin</strong> et lui donner un nom . Ensuite, dans un fichier SASS (du composant par exemple) , la directive <strong>@include</strong> permet de l&#8217;utiliser.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>Dans un fichier sass.
+@mixin my_mixin {
+ // css code
+}
+// dans le fichier sass.
+@include my_mixin</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Pour la mise en oeuvre des paramètre, il suffit de les lister dans à la suite du nom de la mixin. Une valeur par défaut peut être définie à la suite du paramètre .</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>@mixin my_mixin($param1, $param2 : default)
+
+@include my_mixin($value1,$value2)
+@include my_mixin($value1) , value2 vaut default</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Exemple concret</div>
+<div class="content">
+<pre>@mixin my_mixin($align, $margin : 10px) {
+    display: inline-block;
+    vertical-align : $align;
+    margin-left: $margin
+}
+// utilisation
+.container {
+    @include inline-block(middle)
+}</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_les_fonctions">Les fonctions</h3>
+<div class="paragraph">
+<p>La différence entre une mixin et une fonction  est le résultat obtenu . La mixin permet d&#8217;obtenir du code, la fonction retourne une valeur.</p>
+</div>
+<div class="paragraph">
+<p>Grâce aux fonctions, il sera possible de calculer des valeurs tels que des %, concertir des unités, changer une couleur &#8230;&#8203;</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>@function percentage($num) {
+    // code
+}
+
+.bloc {
+    width: percentage($num/$container-width);
+}</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_conditions_et_boucles">Conditions et boucles</h3>
+<div class="paragraph">
+<p>Tel un langage évolué, SASS dispose de mots clés pour gérer les contions</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$color : blue;
+$border :'';
+
+@if ($color == red) {
+    $border : 2 solid black
+}
+@elseif ($color == blue) {
+    $border : 2 solid red
+}
+@else {
+    $border : none
+}
+
+.select {
+    color: $color;
+    border: $border;
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>La notion de boucle est aussi présente en SASS.</p>
+</div>
+<div class="listingblock">
+<div class="title">boucle for pour construire des class grid-1,grid-2,&#8230;&#8203;</div>
+<div class="content">
+<pre>@for $i from 1 through 6 {
+    .grid-#{$i} {
+        width: 100px*$i;
+    }
+}</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">utilisation de while</div>
+<div class="content">
+<pre>$i: 6;
+
+@while $i &gt; 0 {
+    .item-#{$i} { width: 2em * $i; }
+    $i: $i - 2;
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>et enfin un for each</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>@each $animal in puma, sea-slug, egret, salamander {
+    .#{$animal}-icon {
+      background-image: url('/images/#{$animal}.png');
+    }
+}</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_imbrication_des_règles">Imbrication des règles</h3>
+<div class="paragraph">
+<p>L&#8217;imbrication des règles permet de rapidement créer des classes pour les différents états css.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$link_color: #ce649b;
+$color_hover: darken($link_color, 20%); // fonction SASS qui assombrit la couleur
+$color_focus: lighten($link_color, 10%); // fonction SASS qui éclaircit la couleur
+
+// &amp; : représente l'élément parent
+
+.my_class a {
+     color: $link_color;
+     &amp;:hover {
+         color: $color_hover;
+     }
+     &amp;:focus {
+         color: $color_focus;
+     }
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Ce code va permettre de créer trois classes (my_class a , my_class a:hover, my_class a:focus)</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_les_partials">Les partials</h3>
+<div class="paragraph">
+<p>Le nom d&#8217;un partial est toujours préfixé par un underscore <em> _themes.scss </em></p>
+</div>
+<div class="paragraph">
+<p>Grâce à <em>@import</em> il est possible d&#8217;avoir une structure modulaire.</p>
+</div>
+<div class="paragraph">
+<p><a href="https://indepth.dev/posts/1347/custom-theme-for-angular-material-components-series-part-3-apply-theme" class="bare">https://indepth.dev/posts/1347/custom-theme-for-angular-material-components-series-part-3-apply-theme</a></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Version 3.0<br>
+Last updated 2021-12-06 20:45:04 +0100
+</div>
+</div>
+</body>
+</html>

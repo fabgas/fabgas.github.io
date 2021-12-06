@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.16">
+<title>Utilisation de Jib</title>
+<style>
+/* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
+
+@import url(https://fonts.googleapis.com/css?family=Cabin+Sketch|Architects+Daughter);
+@import url(https://cdn.jsdelivr.net/gh/asciidoctor/asciidoctor@2.0/data/stylesheets/asciidoctor-default.css); /* Default asciidoc style framework - important */
+
+/* CUSTOMISATIONS */
+/* Change the values in root for quick customisation. If you want even more fine grain... venture further. */
+:root{
+--maincolor:#FFFFFF;
+--primarycolor:#000000;
+--secondarycolor:#1a237e;
+--tertiarycolor:#CCCCCC;
+--highlightcolor: #ffd600;
+--sidebarbackground:#CACACA;
+--linkcolor:#0D47A1;
+--linkcoloralternate:#B71C1C;
+--stickynote: #e8e8e8;
+--white:#FFFFFF;
+--black:#000000;
+--title:#311b92
+}
+
+/* Text styles */
+
+body{font-family: "Architects Daughter",sans-serif;background-color: #fff;background-size: 100% 1.2em;}
+
+h1{color:var(--primarycolor) !important;font-family:"Cabin Sketch",sans-serif;}
+h2,h3{color:var(--title) !important;font-family:"Cabin Sketch",sans-serif;font-weight:bold;text-decoration: underline;}
+h4,h5,h6{color:var(--black) !important;font-family:"Cabin Sketch",sans-serif;font-weight:bold;text-decoration: underline;}
+.title{color:var(--black) !important;font-family:"Architects Daughter",sans-serif;font-style: normal; font-weight: normal;}
+/*a{text-decoration: none;}*/
+p{font-family: "Architects Daughter",sans-serif ! important}
+#toc.toc2 a:link{color:var(--linkcolor); font-family: "Architects Daughter" !important}
+blockquote{color:var(--secondarycolor) !important}
+.quoteblock{color:var(--black)}
+.quoteblock blockquote:before{color:var(--black)}
+code{color:var(--highlightcolor);background-color: var(--black) !important}
+mark{background-color: var(--highlightcolor)} /* Text highlighting color */
+pre{background-color: var(--stickynote) !important;color:var(--secondarycolor);font-family: monospace;}
+
+/* Table styles */
+th{background-color: var(--maincolor);color:var(--black) !important;}
+td{background-color: var(--maincolor);color: var(--black) !important}
+
+
+#toc.toc2{background-color:var(--sidebarbackground);font-family: "Architects Daughter",sans-serif;}
+#toctitle{color:var(--primarycolor); font-family: "Cabin Sketch"}
+
+.literalblock > .content pre, .listingblock > .content pre {
+    background: #eeeeee;
+    border-width: 1px;
+    border-style: dashed;
+    border-color: #666666;
+    -webkit-border-radius: 0;
+    border-radius: 0;
+    padding: 1.25em 1.5625em 1.125em 1.5625em;
+    word-wrap: break-word;
+    }
+.conum {
+      display: inline-block;
+       color: white;
+       background-color: black;
+       border-radius: 100px;
+       text-align: center;
+       width: 18px;
+       height: 18px;
+       font-size: 12px;
+       font-weight: bold;
+       line-height: 18px;
+       font-family: Arial, sans-serif;
+       font-style: normal;
+       position: relative;
+       top: -1px;
+    }
+}
+ol li::marker {
+  color: var(--secondarycolor);
+  font-weight: bold;
+}
+
+/* Responsiveness fixes */
+video {
+  max-width: 100%;
+}
+
+@media all and (max-width: 600px) {
+table {
+  width: 55vw!important;
+  font-size: 3vw;
+}
+}
+
+</style>
+</head>
+<body class="article">
+<div id="header">
+<h1>Utilisation de Jib</h1>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p><strong>Jib</strong> est une librairie de construction d&#8217;image docker &#8230;&#8203;sans Docker.</p>
+</div>
+<div class="paragraph">
+<p>Dans ce document, une simple application Spring Boot va être containerisé et l&#8217;image publiée dans un registre.</p>
+</div>
+<div class="paragraph">
+<p>La grand intérêt de <strong>Jib</strong> est de libérer de Docker sous deux aspects :</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Pas besoin d&#8217;écrire de Dockerfile</p>
+</li>
+<li>
+<p>Pas besoin de Docker</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Jib</strong> est disponible sous forme de plugin maven ou gradle. Cela permet de simplifier le pipeline de CI/CD (plus besoin de docker dans Jenkins).</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_lapplication">L&#8217;application</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>L&#8217;application qui va être déployée sera un service Rest, écoutant à l&#8217;URL localhost:8080/greeting</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>@RestController
+public class GreetingController {
+
+    private static final String template = "Hello Docker, %s!";
+    private final AtomicLong counter = new AtomicLong();
+
+    @GetMapping("/greeting")
+    public Greeting greeting(@RequestParam(value="name",
+        defaultValue="World") String name) {
+
+        return new Greeting(counter.incrementAndGet(),
+          String.format(template, name));
+    }
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Rien de bien compliqué</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_configuration_du_plugin">Configuration du plugin</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Ici, l&#8217;application utilise maven pour la construction du projet.</p>
+</div>
+<div class="paragraph">
+<p>Dans le fichier pom.xml, il faut ajouter la référence au plugin</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>  &lt;plugin&gt;
+    &lt;groupId&gt;com.google.cloud.tools&lt;/groupId&gt;
+     &lt;artifactId&gt;jib-maven-plugin&lt;/artifactId&gt; <b class="conum">(1)</b>
+     &lt;version&gt;${jib-maven-plugin.version}&lt;/version&gt;
+     &lt;configuration&gt;
+       &lt;to&gt;
+        &lt;image&gt;{{registry link}}&lt;/image&gt; <b class="conum">(2)</b>
+           &lt;/to&gt;
+     &lt;/configuration&gt;
+  &lt;/plugin&gt;
+...
+&lt;properties&gt;
+        &lt;jib-maven-plugin.version&gt;3.1.4&lt;/jib-maven-plugin.version&gt;
+    &lt;/properties&gt;</pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>Référence au plugin de <strong>Jib</strong>.</p>
+</li>
+<li>
+<p>Lien vers le registry de stockage de images  au format <a href="#server">[server]</a>/<a href="#repository">[repository]</a></p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Les crédentials du registry doivent être mis en local , dans le fichier.m2/settings.xml de maven</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>exemple de credentials pour le docker hub.</p>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>&lt;servers&gt;
+    &lt;server&gt;
+        &lt;id&gt;registry.hub.docker.com&lt;/id&gt;
+        &lt;username&gt;&lt;DockerHub Username&gt;&lt;/username&gt;
+        &lt;password&gt;&lt;DockerHub Password&gt;&lt;/password&gt;
+    &lt;/server&gt;
+&lt;/servers&gt;</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_execution_de_la_commande_de_génération">Execution de la commande de génération</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>A l&#8217;aide de la configuration, il est simple d&#8217;exécuter la construction de l&#8217;image</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>mvn compile jib:build</pre>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="images/resultat-jib-build.png" alt="resultat jib build">
+</div>
+</div>
+<div class="paragraph">
+<p>A la suite de cette construction, il est possible de démarrer un container à partir de l&#8217;image</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre> docker run -d -p 4999:8080 &lt;imagename&gt;</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_paramètres_optionnels">Paramètres optionnels</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Il est possible de préciser quelques paramètres pour construire l&#8217;image</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Dans le tag &lt;to&gt; : <strong>tags</strong>: permet de spécifier la valeur du tag</p>
+</li>
+<li>
+<p>Dans le tag &lt;from&gt; : <strong>image</strong> permet de sépcifier une image de base. Par defaut, adoptopenjdk11-jre.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2021-11-27 16:58:26 +0100
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.16">
+<title>Multiples configurations avec gcloud</title>
+<style>
+/* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
+
+@import url(https://fonts.googleapis.com/css?family=Cabin+Sketch|Architects+Daughter);
+@import url(https://cdn.jsdelivr.net/gh/asciidoctor/asciidoctor@2.0/data/stylesheets/asciidoctor-default.css); /* Default asciidoc style framework - important */
+
+/* CUSTOMISATIONS */
+/* Change the values in root for quick customisation. If you want even more fine grain... venture further. */
+:root{
+--maincolor:#FFFFFF;
+--primarycolor:#000000;
+--secondarycolor:#1a237e;
+--tertiarycolor:#CCCCCC;
+--highlightcolor: #ffd600;
+--sidebarbackground:#CACACA;
+--linkcolor:#0D47A1;
+--linkcoloralternate:#B71C1C;
+--stickynote: #e8e8e8;
+--white:#FFFFFF;
+--black:#000000;
+--title:#311b92
+}
+
+/* Text styles */
+
+body{font-family: "Architects Daughter",sans-serif;background-color: #fff;background-size: 100% 1.2em;}
+
+h1{color:var(--primarycolor) !important;font-family:"Cabin Sketch",sans-serif;}
+h2,h3{color:var(--title) !important;font-family:"Cabin Sketch",sans-serif;font-weight:bold;text-decoration: underline;}
+h4,h5,h6{color:var(--black) !important;font-family:"Cabin Sketch",sans-serif;font-weight:bold;text-decoration: underline;}
+.title{color:var(--black) !important;font-family:"Architects Daughter",sans-serif;font-style: normal; font-weight: normal;}
+/*a{text-decoration: none;}*/
+p{font-family: "Architects Daughter",sans-serif ! important}
+#toc.toc2 a:link{color:var(--linkcolor); font-family: "Architects Daughter" !important}
+blockquote{color:var(--secondarycolor) !important}
+.quoteblock{color:var(--black)}
+.quoteblock blockquote:before{color:var(--black)}
+code{color:var(--highlightcolor);background-color: var(--black) !important}
+mark{background-color: var(--highlightcolor)} /* Text highlighting color */
+pre{background-color: var(--stickynote) !important;color:var(--secondarycolor);font-family: monospace;}
+
+/* Table styles */
+th{background-color: var(--maincolor);color:var(--black) !important;}
+td{background-color: var(--maincolor);color: var(--black) !important}
+
+
+#toc.toc2{background-color:var(--sidebarbackground);font-family: "Architects Daughter",sans-serif;}
+#toctitle{color:var(--primarycolor); font-family: "Cabin Sketch"}
+
+.literalblock > .content pre, .listingblock > .content pre {
+    background: #eeeeee;
+    border-width: 1px;
+    border-style: dashed;
+    border-color: #666666;
+    -webkit-border-radius: 0;
+    border-radius: 0;
+    padding: 1.25em 1.5625em 1.125em 1.5625em;
+    word-wrap: break-word;
+    }
+.conum {
+      display: inline-block;
+       color: white;
+       background-color: black;
+       border-radius: 100px;
+       text-align: center;
+       width: 18px;
+       height: 18px;
+       font-size: 12px;
+       font-weight: bold;
+       line-height: 18px;
+       font-family: Arial, sans-serif;
+       font-style: normal;
+       position: relative;
+       top: -1px;
+    }
+}
+ol li::marker {
+  color: var(--secondarycolor);
+  font-weight: bold;
+}
+
+/* Responsiveness fixes */
+video {
+  max-width: 100%;
+}
+
+@media all and (max-width: 600px) {
+table {
+  width: 55vw!important;
+  font-size: 3vw;
+}
+}
+
+</style>
+</head>
+<body class="article">
+<div id="header">
+<h1>Multiples configurations avec gcloud</h1>
+</div>
+<div id="content">
+<div class="paragraph">
+<p>A l&#8217;aide de l&#8217;outil gcloud, il  est possible de créer différentes configurations et de switcher entre elles.</p>
+</div>
+<div class="paragraph">
+<p>Ainsi, sur une machine , il sera possible de gérer plusieurs comptes et de passer de l&#8217;un à l&#8217;autre par une simple ligne de commande.</p>
+</div>
+<div class="paragraph">
+<p>Il faut pour cela utiliser un sous module de <em>gcloud config</em>.</p>
+</div>
+<div class="paragraph">
+<p>Passer d&#8217;une configuration à l&#8217;autre, il faut utiliser cette ligne de commande.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>gcloud config configurations activate &lt;&lt;config-name&gt;&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>La création d&#8217;une configuration se fait ainsi en quelques étapes :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ gcloud config configurations create &lt;&lt;config-name&gt;&gt;  <b class="conum">(1)</b>
+Created [demo-config].
+Activated [demo-config].
+
+$ gcloud config set project my-project-id <b class="conum">(2)</b>
+Updated property [core/project].
+
+$ gcloud config set account my-account@example.com <b class="conum">(3)</b>
+Updated property [core/account].
+
+$ gcloud config set compute/region us-east1 <b class="conum">(4)</b>
+Updated property [compute/region].
+
+$ gcloud config set compute/zone us-east1-b <b class="conum">(5)</b>
+Updated property [compute/zone].</pre>
+</div>
+</div>
+<div class="colist arabic">
+<ol>
+<li>
+<p>Activation d&#8217;une configuration</p>
+</li>
+<li>
+<p>Déclaration de l&#8217;un des projets</p>
+</li>
+<li>
+<p>Déclaration du compte associé à cette configuration</p>
+</li>
+<li>
+<p>Définition d&#8217;une région (non obligatoire)</p>
+</li>
+<li>
+<p>Définition d&#8217;une zone (non obligatoire)</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Pour se logger au compte défini ici, il faut faire appel à la commande</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>gcloud auth login</pre>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Last updated 2021-11-27 15:37:58 +0100
+</div>
+</div>
+</body>
+</html>
